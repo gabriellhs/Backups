@@ -72,6 +72,7 @@ public class AddressBook {
     private static final String MESSAGE_COMMAND_HELP_PARAMETERS = "\tParameters: %1$s";
     private static final String MESSAGE_COMMAND_HELP_EXAMPLE = "\tExample: %1$s";
     private static final String MESSAGE_DELETE_PERSON_SUCCESS = "Deleted Person: %1$s";
+    private static final String MESSAGE_CHANGE_PERSON_SUCCESS = "Changed Person: %1$s";
     private static final String MESSAGE_DISPLAY_PERSON_DATA = "%1$s  Phone Number: %2$s  Email: %3$s";
     private static final String MESSAGE_DISPLAY_LIST_ELEMENT_INDEX = "%1$d. ";
     private static final String MESSAGE_GOODBYE = "Exiting Address Book... Good bye!";
@@ -105,6 +106,12 @@ public class AddressBook {
             + PERSON_DATA_PREFIX_PHONE + "PHONE_NUMBER "
             + PERSON_DATA_PREFIX_EMAIL + "EMAIL";
     private static final String COMMAND_ADD_EXAMPLE = COMMAND_ADD_WORD + " John Doe p/98765432 e/johnd@gmail.com";
+
+    private static final String COMMAND_CHANGE_WORD = "change";
+    private static final String COMMAND_CHANGE_DESC = "Change a person identified by the index number used in"
+            + "the last find/list call.";
+    private static final String COMMAND_CHANGE_PARAMETER = "INDEX";
+    private static final String COMMAND_CHANGE_EXAMPLE = COMMAND_CHANGE_WORD + "1";
 
     private static final String COMMAND_FIND_WORD = "find";
     private static final String COMMAND_FIND_DESC = "Finds all persons whose names contain any of the specified "
@@ -378,6 +385,8 @@ public class AddressBook {
                 return executeListAllPersonsInAddressBook();
             case COMMAND_DELETE_WORD:
                 return (String) executeDeletePerson(commandArgs).get(0);
+            case COMMAND_CHANGE_WORD:
+                return executeChangePerson(commandArgs);
             case COMMAND_CLEAR_WORD:
                 return executeClearAddressBook();
             case COMMAND_HELP_WORD:
@@ -528,6 +537,17 @@ public class AddressBook {
         return deletionMsgAndStatus;
     }
 
+    private static String executeChangePerson(String commandArgs) {
+        if (!isChangePersonArgsValid(commandArgs)) {
+            return getMessageForInvalidCommandInput(COMMAND_CHANGE_WORD, getUsageInfoForChangeCommand());
+        }
+        Vector<Object> deletionMsgAndStatus = executeDeletePerson(commandArgs);
+        if ((boolean) deletionMsgAndStatus.get(1) == true) {
+            return (String) deletionMsgAndStatus.get(1);
+        }
+        return (String) deletionMsgAndStatus.get(0);
+    }
+
     /**
      * Checks validity of delete person argument string's format.
      *
@@ -588,6 +608,18 @@ public class AddressBook {
     private static String getMessageForSuccessfulDelete(String[] deletedPerson) {
         return String.format(MESSAGE_DELETE_PERSON_SUCCESS, getMessageForFormattedPersonData(deletedPerson));
     }
+
+    /**
+     * Constructs a feedback message for a successful delete person command execution.
+     *
+     * @param changedPerson successfully deleted
+     * @return successful change person feedback message
+     * @see #executeChangePerson(String)
+     */
+    private static String getMessageForSuccessfulChange(String[] changedPerson) {
+        return String.format(MESSAGE_CHANGE_PERSON_SUCCESS, getMessageForFormattedPersonData(changedPerson));
+    }
+
 
     /**
      * Clears all persons in the address book.
@@ -1153,6 +1185,15 @@ public class AddressBook {
         return String.format(MESSAGE_COMMAND_HELP, COMMAND_DELETE_WORD, COMMAND_DELETE_DESC) + LS
                 + String.format(MESSAGE_COMMAND_HELP_PARAMETERS, COMMAND_DELETE_PARAMETER) + LS
                 + String.format(MESSAGE_COMMAND_HELP_EXAMPLE, COMMAND_DELETE_EXAMPLE) + LS;
+    }
+
+    /**
+     * Returns the string for showing 'change' command usage instruction
+     */
+    private static String getUsageInfoForChangeCommand() {
+        return String.format(MESSAGE_COMMAND_HELP, COMMAND_CHANGE_WORD, COMMAND_CHANGE_DESC) + LS
+                + String.format(MESSAGE_COMMAND_HELP_PARAMETERS, COMMAND_CHANGE_PARAMETER) + LS
+                + String.format(MESSAGE_COMMAND_HELP_EXAMPLE, COMMAND_CHANGE_EXAMPLE) + LS;
     }
 
     /**
