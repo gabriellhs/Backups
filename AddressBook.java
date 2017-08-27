@@ -539,7 +539,7 @@ public class AddressBook {
         }
         final String[] targetInModel = getPersonByLastVisibleIndex(targetVisibleIndex);
 
-        if(deletePersonFromAddressBook(targetInModel)) {
+        if (deletePersonFromAddressBook(targetInModel)) {
             deletionMsgAndStatus.add(getMessageForSuccessfulDelete(targetInModel)); // success
             deletionMsgAndStatus.add(true);
         } else {
@@ -559,11 +559,22 @@ public class AddressBook {
         if (!isChangePersonArgsValid(commandArgs)) {
             return getMessageForInvalidCommandInput(COMMAND_CHANGE_WORD, getUsageInfoForChangeCommand());
         }
-        Vector<Object> deletionMsgAndStatus = executeDeletePerson(commandArgs);
-        if ((boolean) deletionMsgAndStatus.get(1) == true) {
-            return (String) deletionMsgAndStatus.get(1);
+        // Modification is done in 2 steps - deletion followed by adding
+        // separate arguments so that one of them can be used for deleting the person
+        // the other will be used for re-adding the person
+        String[] personToChange = commandArgs.split("\\s+", 2);
+        Vector<Object> deletionMsgAndStatus = executeDeletePerson(personToChange[0]);
+
+        if ((boolean) deletionMsgAndStatus.get(1) == false) {
+            return (String) deletionMsgAndStatus.get(0);
+        } else {
+            Vector<Object> additionMsgAndStatus = executeAddPerson(personToChange[1]);
+            if ((boolean) additionMsgAndStatus.get(1) == false) {
+                return (String) additionMsgAndStatus.get(0);
+            } else {
+                return getMessageForSuccessfulChangePerson(personToChange);
+            }
         }
-        return (String) deletionMsgAndStatus.get(0);
     }
 
     /**
@@ -588,12 +599,9 @@ public class AddressBook {
      * @return whether the input args string is valid
      */
     private static boolean isChangePersonArgsValid(String rawArgs) {
-        try {
-            final int extractedIndex = Integer.parseInt(rawArgs.trim()); // use standard libraries to parse
-            return extractedIndex >= DISPLAYED_INDEX_OFFSET;
-        } catch (NumberFormatException nfe) {
-            return false;
-        }
+        String[] personToChange = rawArgs.split("\\s+", 2);
+        return personToChange.length >= 2 && isDeletePersonArgsValid(personToChange[0]) &&
+                isPersonDataExtractableFrom(personToChange[1]);
     }
 
     /**
@@ -634,7 +642,7 @@ public class AddressBook {
      * @return successful change person feedback message
      * @see #executeChangePerson(String)
      */
-    private static String getMessageForSuccessfulChange(String[] changedPerson) {
+    private static String getMessageForSuccessfulChangePerson(String[] changedPerson) {
         return String.format(MESSAGE_CHANGE_PERSON_SUCCESS, getMessageForFormattedPersonData(changedPerson));
     }
 
@@ -1172,6 +1180,7 @@ public class AddressBook {
         return getUsageInfoForAddCommand() + LS
                 + getUsageInfoForFindCommand() + LS
                 + getUsageInfoForViewCommand() + LS
+                + getUsageInfoForChangeCommand() + LS
                 + getUsageInfoForDeleteCommand() + LS
                 + getUsageInfoForClearCommand() + LS
                 + getUsageInfoForExitCommand() + LS
