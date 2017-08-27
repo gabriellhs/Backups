@@ -110,8 +110,11 @@ public class AddressBook {
     private static final String COMMAND_CHANGE_WORD = "change";
     private static final String COMMAND_CHANGE_DESC = "Change a person identified by the index number used in"
             + "the last find/list call.";
-    private static final String COMMAND_CHANGE_PARAMETER = "INDEX";
-    private static final String COMMAND_CHANGE_EXAMPLE = COMMAND_CHANGE_WORD + "1";
+    private static final String COMMAND_CHANGE_PARAMETERS = "INDEX "
+            + "NAME "
+            + PERSON_DATA_PREFIX_PHONE + "PHONE_NUMBER "
+            + PERSON_DATA_PREFIX_EMAIL + "EMAIL";
+    private static final String COMMAND_CHANGE_EXAMPLE = COMMAND_CHANGE_WORD + "1 John Doe p/98765432 e/johnd@gmail.com";
 
     private static final String COMMAND_FIND_WORD = "find";
     private static final String COMMAND_FIND_DESC = "Finds all persons whose names contain any of the specified "
@@ -378,7 +381,7 @@ public class AddressBook {
         final String commandArgs = commandTypeAndParams[1];
         switch (commandType) {
             case COMMAND_ADD_WORD:
-                return executeAddPerson(commandArgs);
+                return (String) executeAddPerson(commandArgs).get(0);
             case COMMAND_FIND_WORD:
                 return executeFindPersons(commandArgs);
             case COMMAND_LIST_WORD:
@@ -425,19 +428,28 @@ public class AddressBook {
      * @param commandArgs full command args string from the user
      * @return feedback display message for the operation result
      */
-    private static String executeAddPerson(String commandArgs) {
+    private static Vector<Object> executeAddPerson(String commandArgs) {
+        // Stores result of addition as a pair in the following format:
+        // <addition error or success message,status (true if successful, false otherwise)>
+        Vector<Object> additionMsgAndStatus = new Vector<Object>();
+
         // try decoding a person from the raw args
         final Optional<String[]> decodeResult = decodePersonFromString(commandArgs);
 
         // checks if args are valid (decode result will not be present if the person is invalid)
         if (!decodeResult.isPresent()) {
-            return getMessageForInvalidCommandInput(COMMAND_ADD_WORD, getUsageInfoForAddCommand());
+            additionMsgAndStatus.add(getMessageForInvalidCommandInput(COMMAND_ADD_WORD,
+                    getUsageInfoForAddCommand()));
+            additionMsgAndStatus.add(false);
+            return additionMsgAndStatus;
         }
 
         // add the person as specified
         final String[] personToAdd = decodeResult.get();
         addPersonToAddressBook(personToAdd);
-        return getMessageForSuccessfulAddPerson(personToAdd);
+        additionMsgAndStatus.add(getMessageForSuccessfulAddPerson(personToAdd));
+        additionMsgAndStatus.add(true);
+        return additionMsgAndStatus;
     }
 
     /**
@@ -537,6 +549,12 @@ public class AddressBook {
         return deletionMsgAndStatus;
     }
 
+    /**
+     * Changes person identified using last displayed index.
+     *
+     * @param commandArgs full command args string from the user
+     * @return feedback display message for the operation result
+     */
     private static String executeChangePerson(String commandArgs) {
         if (!isChangePersonArgsValid(commandArgs)) {
             return getMessageForInvalidCommandInput(COMMAND_CHANGE_WORD, getUsageInfoForChangeCommand());
@@ -610,9 +628,9 @@ public class AddressBook {
     }
 
     /**
-     * Constructs a feedback message for a successful delete person command execution.
+     * Constructs a feedback message for a successful changed person command execution.
      *
-     * @param changedPerson successfully deleted
+     * @param changedPerson successfully changed
      * @return successful change person feedback message
      * @see #executeChangePerson(String)
      */
@@ -1192,7 +1210,7 @@ public class AddressBook {
      */
     private static String getUsageInfoForChangeCommand() {
         return String.format(MESSAGE_COMMAND_HELP, COMMAND_CHANGE_WORD, COMMAND_CHANGE_DESC) + LS
-                + String.format(MESSAGE_COMMAND_HELP_PARAMETERS, COMMAND_CHANGE_PARAMETER) + LS
+                + String.format(MESSAGE_COMMAND_HELP_PARAMETERS, COMMAND_CHANGE_PARAMETERS) + LS
                 + String.format(MESSAGE_COMMAND_HELP_EXAMPLE, COMMAND_CHANGE_EXAMPLE) + LS;
     }
 
