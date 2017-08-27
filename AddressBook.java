@@ -114,7 +114,7 @@ public class AddressBook {
             + "NAME "
             + PERSON_DATA_PREFIX_PHONE + "PHONE_NUMBER "
             + PERSON_DATA_PREFIX_EMAIL + "EMAIL";
-    private static final String COMMAND_CHANGE_EXAMPLE = COMMAND_CHANGE_WORD + "1 John Doe p/98765432 e/johnd@gmail.com";
+    private static final String COMMAND_CHANGE_EXAMPLE = COMMAND_CHANGE_WORD + " 1 John Doe p/98765432 e/johnd@gmail.com";
 
     private static final String COMMAND_FIND_WORD = "find";
     private static final String COMMAND_FIND_DESC = "Finds all persons whose names contain any of the specified "
@@ -562,17 +562,19 @@ public class AddressBook {
         // Modification is done in 2 steps - deletion followed by adding
         // separate arguments so that one of them can be used for deleting the person
         // the other will be used for re-adding the person
-        String[] personToChange = commandArgs.split("\\s+", 2);
-        Vector<Object> deletionMsgAndStatus = executeDeletePerson(personToChange[0]);
+        String[] argsForValidation = commandArgs.split("\\s+", 2);
+        Vector<Object> deletionMsgAndStatus = executeDeletePerson(argsForValidation[0]);
 
         if ((boolean) deletionMsgAndStatus.get(1) == false) {
             return (String) deletionMsgAndStatus.get(0);
         } else {
-            Vector<Object> additionMsgAndStatus = executeAddPerson(personToChange[1]);
+            Vector<Object> additionMsgAndStatus = executeAddPerson(argsForValidation[1]);
             if ((boolean) additionMsgAndStatus.get(1) == false) {
                 return (String) additionMsgAndStatus.get(0);
             } else {
-                return getMessageForSuccessfulChangePerson(personToChange);
+                Optional<String[]> personToChange = decodePersonFromString(argsForValidation[1]);
+                assert(personToChange.isPresent());
+                return getMessageForSuccessfulChangePerson(personToChange.get());
             }
         }
     }
