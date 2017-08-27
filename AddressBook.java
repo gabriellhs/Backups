@@ -108,7 +108,7 @@ public class AddressBook {
     private static final String COMMAND_ADD_EXAMPLE = COMMAND_ADD_WORD + " John Doe p/98765432 e/johnd@gmail.com";
 
     private static final String COMMAND_CHANGE_WORD = "change";
-    private static final String COMMAND_CHANGE_DESC = "Change a person identified by the index number used in"
+    private static final String COMMAND_CHANGE_DESC = "Change a person identified by the index number used in "
             + "the last find/list call.";
     private static final String COMMAND_CHANGE_PARAMETERS = "INDEX "
             + "NAME "
@@ -381,7 +381,8 @@ public class AddressBook {
         final String commandArgs = commandTypeAndParams[1];
         switch (commandType) {
             case COMMAND_ADD_WORD:
-                return (String) executeAddPerson(commandArgs).get(0);
+                return (String) executeAddPerson(commandArgs,
+                        COMMAND_ADD_WORD, getUsageInfoForAddCommand()).get(0);
             case COMMAND_FIND_WORD:
                 return executeFindPersons(commandArgs);
             case COMMAND_LIST_WORD:
@@ -428,7 +429,7 @@ public class AddressBook {
      * @param commandArgs full command args string from the user
      * @return feedback display message for the operation result
      */
-    private static Vector<Object> executeAddPerson(String commandArgs) {
+    private static Vector<Object> executeAddPerson(String commandArgs, String command, String usageInfoForCommand) {
         // Stores result of addition as a pair in the following format:
         // <addition error or success message,status (true if successful, false otherwise)>
         Vector<Object> additionMsgAndStatus = new Vector<Object>();
@@ -438,8 +439,8 @@ public class AddressBook {
 
         // checks if args are valid (decode result will not be present if the person is invalid)
         if (!decodeResult.isPresent()) {
-            additionMsgAndStatus.add(getMessageForInvalidCommandInput(COMMAND_ADD_WORD,
-                    getUsageInfoForAddCommand()));
+            additionMsgAndStatus.add(getMessageForInvalidCommandInput(command,
+                    usageInfoForCommand));
             additionMsgAndStatus.add(false);
             return additionMsgAndStatus;
         }
@@ -568,12 +569,13 @@ public class AddressBook {
         if ((boolean) deletionMsgAndStatus.get(1) == false) {
             return (String) deletionMsgAndStatus.get(0);
         } else {
-            Vector<Object> additionMsgAndStatus = executeAddPerson(argsForValidation[1]);
+            Vector<Object> additionMsgAndStatus = executeAddPerson(argsForValidation[1],
+                    COMMAND_CHANGE_WORD, getUsageInfoForChangeCommand());
             if ((boolean) additionMsgAndStatus.get(1) == false) {
                 return (String) additionMsgAndStatus.get(0);
             } else {
                 Optional<String[]> personToChange = decodePersonFromString(argsForValidation[1]);
-                assert(personToChange.isPresent());
+                assert (personToChange.isPresent());
                 return getMessageForSuccessfulChangePerson(personToChange.get());
             }
         }
